@@ -6,6 +6,8 @@ import (
 	"github.com/welschsn/cdays/internal/routing"
 	"os"
 	"github.com/welschsn/cdays/internal/version"
+	"os/signal"
+	"syscall"
 )
 
 func main()  {
@@ -43,6 +45,11 @@ func main()  {
 	}
 
 
-	log.Print("The application has finished")
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
+	select {
+	case killSignal := <-interrupt:
+		log.Printf("Got %s. Stopping...", killSignal)
+	}
 }
