@@ -1,7 +1,7 @@
 package version
 
 var (
-	Release string
+	Release   string
 	BuildTime string
-	Commit string
+	Commit    string
 )

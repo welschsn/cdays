@@ -1,22 +1,23 @@
 package main
 
 import (
-	"net/http"
-	"log"
+	"context"
 	"github.com/welschsn/cdays/internal/routing"
-	"os"
 	"github.com/welschsn/cdays/internal/version"
+	"log"
+	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
-func main()  {
+func main() {
 
 	log.Printf(
 		"The application starting is %s, build time is %s, commit is %v...",
 		version.Release, version.BuildTime, version.Commit,
-		)
-
+	)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -33,17 +34,28 @@ func main()  {
 		port, diagPort,
 	)
 
+	var blServer, diagServer http.Server
 
-	go func () {
+	srvErrs := make(chan error, 2)
+	go func() {
 		r := routing.NewBLRouter()
-		log.Fatal(http.ListenAndServe(":" + port, r))
+		blServer = http.Server{
+			Addr:    ":" + port,
+			Handler: r,
+		}
+		err := blServer.ListenAndServe()
+		srvErrs <- err
 	}()
 
-	{
+	go func() {
 		r := routing.NewDiagnosticRouter()
-		log.Fatal(http.ListenAndServe(":" + diagPort, r))
-	}
-
+		diagServer = http.Server{
+			Addr:    ":" + diagPort,
+			Handler: r,
+		}
+		err := diagServer.ListenAndServe()
+		srvErrs <- err
+	}()
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
@@ -51,5 +63,19 @@ func main()  {
 	select {
 	case killSignal := <-interrupt:
 		log.Printf("Got %s. Stopping...", killSignal)
+	case err := <-srvErrs:
+		log.Printf("Got a server error: %s", err)
+	}
+
+	{
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelFunc() // releases resources if slowOperation completes before timeout elapses
+		blServer.Shutdown(ctx)
+	}
+
+	{
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelFunc()
+		diagServer.Shutdown(ctx)
 	}
 }

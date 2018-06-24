@@ -14,15 +14,13 @@ func TestNewBLRouter(t *testing.T) {
 	srv := httptest.NewServer(r)
 	defer srv.Close()
 
-
-	testCases := []struct{
-		route string
+	testCases := []struct {
+		route              string
 		expectedStatusCode int
 	}{
 		{("/home"), http.StatusOK},
 		{("/"), http.StatusNotFound},
 	}
-
 
 	for _, c := range testCases {
 
@@ -30,7 +28,7 @@ func TestNewBLRouter(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if resp.StatusCode != c.expectedStatusCode{
+		if resp.StatusCode != c.expectedStatusCode {
 			t.Errorf("Status code is %v, but %v expected", resp.StatusCode, c.expectedStatusCode)
 		}
 	}

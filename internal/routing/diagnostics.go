@@ -1,12 +1,11 @@
 package routing
 
-
 import (
-	"net/http"
-	"github.com/gorilla/mux"
 	"fmt"
+	"github.com/gorilla/mux"
+	"net/http"
+	"log"
 )
-
 
 func NewDiagnosticRouter() http.Handler {
 
@@ -16,10 +15,13 @@ func NewDiagnosticRouter() http.Handler {
 	return r
 }
 
+func handleOK() func(http.ResponseWriter, *http.Request) {
 
-func handleOK() func(http.ResponseWriter, *http.Request ) {
-
-	return func(w http.ResponseWriter, r * http.Request ){
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf(
+			"Diagnostic endpoint %s called from %s",
+			r.URL, r.RemoteAddr,
+		)
 		fmt.Fprint(w, http.StatusText(http.StatusOK))
 	}
 }
