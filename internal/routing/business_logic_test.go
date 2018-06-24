@@ -31,7 +31,7 @@ func TestNewBLRouter(t *testing.T) {
 			t.Fatal(err)
 		}
 		if resp.StatusCode != c.expectedStatusCode{
-			t.Error("Status code is %v, but %v expected", resp.StatusCode, c.expectedStatusCode)
+			t.Errorf("Status code is %v, but %v expected", resp.StatusCode, c.expectedStatusCode)
 		}
 	}
 }
